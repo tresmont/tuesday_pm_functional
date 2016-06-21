@@ -14,12 +14,57 @@ knitr::opts_chunk$set(echo = TRUE)
 Objectives/tasks to work though:
 
 1. Import a raster — A lidar canopy height model (lidar/Teak_lidarCHM.tif)
-For the CHM, set values == 0 to NA (not trees)
-1. Classify the raster according to some distribution – low medium and tall trees. This could be done using a histogram potentially or we could just decide that <2m is generally grasses / understory, <6m small trees,and the rest are tall trees. A function could import the desired thresholds. Visualize histogram/density and plot vertical cutoff lines.
-1. Take the chm and create a hillshade (http://neon-workwithdata.github.io/neon-data-institute-2016/R/create-hillshade-R/)
-1. PLOT - layer the classified raster on top of the hillshade, add a legend for each “class” - legends are super tricky to simplifying this process with a function would be good.  see: http://neon-workwithdata.github.io/neon-data-institute-2016/R/classify-by-threshold-R/  for my take on forcing a legend outside of the plot area using par settings. You may have other better forms of magic to make this work well. :)
+1. For the CHM, set values == 0 to NA (not trees)
+1. Classify the raster according to some distribution – low medium and tall trees. This could be done using a histogram potentially or we could just decide that <2m is generally grasses / understory, <6m small trees,and the rest are tall trees. A function could import the desired thresholds. Visualize density and plot vertical cutoff lines.
+1. Plot the classified raster, add a legend for each “class” - legends are super tricky to simplifying this process with a function would be good.  see: http://neon-workwithdata.github.io/neon-data-institute-2016/R/classify-by-threshold-R/  for my take on forcing a legend outside of the plot area using par settings. You may have other better forms of magic to make this work well. :)
 1. Export the plot figure to a pdf – publishable
 1. Export the classified raster as a geotiff with NaFlagg = -9999 to an outputs folder.
+
+## Load Libraries
+```{r load-libraries}
+library(raster)
+library(rgdal)
+library(rhdf5)
+
+```
+
+## Import CHM Raster
+
+```{r import-chm}
+# import the raster
+chm <- raster("../NEONdata/D17-California/TEAK/2013/lidar/TEAK_lidarCHM.tif")
+
+# set no data values; trees are > 0
+chm[chm == 0] <- NA
+
+```
+
+## Plot a histogram
+
+A historgram helps identify thresholds
+
+```{r chm-hist}
+# Plot a histogram
+hist(chm,
+     main = "Histogram of Teakettle Site CHM",
+     xlab = "Height (m)")
+
+```
+
+## Determine Thresholds
+
+Common sense suggests heights less than 2m is understory.  The histogram indicates most of the trees are between 5 and ~30m, but 25m seems more appropriate.  The rest are bigger
+
+```{r plot-threshold}
+
+hist(chm,
+     main = "Histogram of Teakettle Site CHM",
+     xlab = "Height (m)")
+abline(v=c(2,25), col = "red")
+
+
+```
+
 
 
 
