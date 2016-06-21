@@ -131,6 +131,14 @@ writeRaster(chm_rcl,
 
 ```
 
+## Document the environment
+
+```{r doc-logfile}
+sink(paste0(format(Sys.time(), "%y-%m-%d:%H%M%S"),
+     "_sessionInfo.txt"))
+sessionInfo()
+sink()
+```
 
 
 
