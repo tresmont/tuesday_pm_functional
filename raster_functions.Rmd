@@ -53,10 +53,10 @@ hist(chm,
 
 ## Determine Thresholds
 
-Common sense suggests heights less than 2m is understory.  The histogram indicates most of the trees are between 5 and ~30m, but 25m seems more appropriate.  The rest are bigger
+Common sense suggests heights less than 2m is understory.  The histogram indicates most of the trees are between 5 and ~30m, but 25m seems a more appropriate cutoff;  The rest are bigger
 
 ```{r plot-threshold}
-
+# plot a new histogram and include cutoffs
 hist(chm,
      main = "Histogram of Teakettle Site CHM",
      xlab = "Height (m)")
@@ -64,6 +64,57 @@ abline(v=c(2,25), col = "red")
 
 
 ```
+
+## Classify the raster
+
+```{r classify-chm}
+
+# create a vector of threshold values
+class_m <- c(-1, 2, 1,
+           2, 25, 2,
+           25, 60, 3)
+
+# make it a matrix
+rcl_m <- matrix(class_m,
+                   ncol = 3,
+                   byrow = TRUE)
+
+# Perform the reclass
+chm_rcl <- reclassify(chm,
+                      rcl_m)
+
+
+# plot the result
+# make room for a legend
+par(xpd = FALSE, mar=c(5.1, 4.1, 4.1, 4.5))
+# plot
+plot(chm_rcl,
+     col=c("red","blue","green"), # hard code colors, unclassified (0)=white,
+		 #N (1) =blue, S(2)=green
+     main="Tree Heights for\nLower Teakettle Site",
+     legend=F)
+# allow legend to plot outside of bounds
+par(xpd=TRUE)
+# create the legend
+legend((par()$usr[2] + 20), 4103300,  # set x,y legend location
+       legend = c("Small (<2)", "Med (2-25m)", "High (>25m)"),  # make sure the order matches the colors, next
+       fill = c("red", "blue", "green"),
+       bty="n") # turn off border
+```
+
+## Export the result
+
+```{r export-chm}
+# export geotiff
+writeRaster(chm_rcl,
+            filename="outputs/TEAK/Teak_chmClassify.tif",
+            format="GTiff",
+            options="COMPRESS=LZW",
+            overwrite = TRUE,
+            NAflag = -9999)
+
+```
+
 
 
 
