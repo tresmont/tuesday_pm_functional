@@ -27,66 +27,68 @@ library(rhdf5)
 ## Import CHM Raster
 
 ```{r import-chm}
+# setting some parameters
+# raster filename
+chm_file <- "../NEONdata/D17-California/TEAK/2013/lidar/TEAK_lidarCHM.tif"
 # import the raster
-chm <- raster("../NEONdata/D17-California/TEAK/2013/lidar/TEAK_lidarCHM.tif")
+chm <- raster(chm_file)
+
+chosen_breaks <- c(0,6,30,100)
 
 # set no data values; trees are > 0
 chm[chm == 0] <- NA
 
-```
+# plot the density
 
-## Plot a histogram
-
-A historgram helps identify thresholds
-
-```{r chm-hist}
-# Plot a histogram
-hist(chm,
-     main = "Histogram of Teakettle Site CHM",
-     xlab = "Height (m)")
-
-```
-
-## Determine Thresholds
-
-Common sense suggests heights less than 2m is understory.  The histogram indicates most of the trees are between 5 and ~30m. Small trees that are not necessarily understory seem to fall at the 10m to 20m;  The rest are bigger
-
-## Classify the raster
-
-```{r classify-chm}
-
-# create a vector of threshold values
-class_m <- c(-1, 2, NA,
-           2, 6, 1,
-           6, 20, 2,
-           20, 100, 3)
-
-# make it a matrix
-rcl_m <- matrix(class_m,
-                   ncol = 3,
-                   byrow = TRUE)
-
-# plot a new density and include cutoffs
 density(chm,
      main = "Density of Teakettle Site CHM",
      xlab = "Height (m)")
 
-# add in threshold values
-abline(v=rcl_m[,2], col = "red")
 
 
-# save as pdf
-pdf(file = "TEAK_CHM_density_with_breaks.pdf", width = 6, height = 7)
+#############################
+# function to create a reclassify matrix from a set of breaks
+create_height_class_matrix <- function(breaks) {
+  # Get the length of the breaks vector to
+  # figure how many classes
+  br_len <- length(breaks)
+  
+  # Initialize height class vector with 0
+  height_class_m <- c(0)
+  
+  # for input of breaks = c(6, 30, 50, 100) we expect:
+  # c(0, 6, 1,
+  #   6, 30, 2,
+  #   30, 50, 3,
+  #   50, 100, 4)
+  
+  for (i in 1:br_len) {
+    height_class_m <- c(height_class_m, breaks[i - 1], breaks[i], i)
+  }
+  
+  reclass_height_mat <- matrix(height_class_m,
+                               ncol = 3,
+                               byrow = TRUE)
+  
+  return(reclass_height_mat)
+}
 
-# plot a new density and include cutoffs
-density(chm,
-     main = "Density of Teakettle Site CHM",
-     xlab = "Height (m)")
+create_height_class_matrix(chosen_breaks)
 
-# add in threshold values
-abline(v=rcl_m[,2], col = "red")
 
-dev.off()
+# a function to plot density of heights with chosen breaks
+# expects chm raster, a title, and a vector of breaks
+plot_chm_density <- function(chm, title, breaks) {
+  density(chm,
+          main = title,
+          xlab = "Canopy Heights (m)")
+  abline(v = breaks, col = "red")
+}
+
+plot_chm_density(chm, title="Canopy Heights at Teakettle", breaks=chosen_breaks)
+
+
+
 
 # Perform the reclass
 chm_rcl <- reclassify(chm,
