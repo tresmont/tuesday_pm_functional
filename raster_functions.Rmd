@@ -78,75 +78,95 @@ create_height_class_matrix(chosen_breaks)
 
 # a function to plot density of heights with chosen breaks
 # expects chm raster, a title, and a vector of breaks
-plot_chm_density <- function(chm, title, breaks) {
-  density(chm,
-          main = title,
+plot_chm_density <- function(rast_in, site.name, bins) {
+  density(rast_in,
+          main = paste("Canopy Height Density\n", site.name),
           xlab = "Canopy Heights (m)")
-  abline(v = breaks, col = "red")
+  abline(v = bins, col = "red")
 }
 
-plot_chm_density(chm, title="Canopy Heights at Teakettle", breaks=chosen_breaks)
+plot_chm_density(chm, site.name="Teakettle", bins = chosen_breaks)
 
 
+# function to export to pdf
+make_pdf <- function(expr, filename, ..., verbose = TRUE) {
+  if (verbose) {
+    message("Creating: ", filename)
+  }
+  pdf(file = filename, ...)
+  on.exit(dev.off())
+  eval.parent(substitute(expr))
+}
 
+make_pdf(plot_chm_density(rast_in = chm,
+                          site.name = "Teakettle",
+                          bins = chosen_breaks),
+         filename = paste("TEAK_chm_density.pdf"),
+         height=6, width=7)
 
 # Perform the reclass
 chm_rcl <- reclassify(chm,
                       rcl_m)
 
-# plot the result
-# make room for a legend
-par(xpd = FALSE, mar=c(5.1, 4.1, 4.1, 4.5))
 
-# plot
-plot(chm_rcl,
-     col=c("red","blue","green"), # hard code colors, unclassified (0)=white,
-		 #N (1) =blue, S(2)=green
-     main="Tree Heights for\nLower Teakettle Site",
-		 xlab = "Lat (UTM)",
-		 ylab = "Lon (UTM)",
-     legend=F)
-# allow legend to plot outside of bounds
-par(xpd=TRUE)
-# create the legend
-# legend x position
-leg_x <- par()$usr[2] + 20
+##########################################
+##########################################
+# function to plot the reclassified raster
 
-# legend y position
-leg_y <- par()$usr[4] + 50 - (abs(par()$usr[3] - par()$usr[4]) / 2)
+plot_reclassified_raster <- function(rast.in, site.name, breaks){
+        # this is a tricky bit because we need to out the legend
+        # outside of the plot region
+        
+        # Get colors for plotting
+        bin.colors <- rev(terrain.colors(length(breaks)))
+        
+        # make room for a legend
+        
+        par(xpd = FALSE, mar = c(5.1, 4.1, 4.1, 4.5))
+        
+        # plot
+        plot(rast.in,
+                 col = bin.colors,
+                 main = paste("Canopy height classes \n", site.name),
+                 legend = FALSE)
+        
+        # allow legend to plot outside of bounds
+        par(xpd = TRUE)
+        
+        # legend x
+        leg.x <- par()$usr[2] + 20
+        
+        # legend y
+        leg.y <- par()$usr[4] + 50 - (abs(par()$usr[3] - par()$usr[4]) / 2) 
+        
+        # create legend text
+        height.mat <- create_height_class_matrix(breaks)
+        
+        # initialize legend text
+        legend.text <- c()
+        
+        for (i in 1:length(breaks)) {
+                
+                legend.text <- c(legend.text, 
+                                                 paste0(height.mat[i, 1], "-", 
+                                                            height.mat[i, 2], " m"))
+        }
+        
+        # create the legend
+        legend(leg.x, leg.y,  # set x,y legend location
+                   legend = legend.text,  # make sure the order matches colors
+                   fill = bin.colors,
+                   bty = "n") # turn off border
+        
+        # turn off plotting outside of bounds
+        par(xpd = FALSE)
+}
 
-legend(leg_x, leg_y,  # set x,y legend location
-       legend = c("6-10m", "10-20m", ">20m"),  # make sure the order matches the colors, next
-       fill = c("red", "blue", "green"),
-       bty="n") # turn off border
+plot_reclassified_raster(rast.in = chm, site.name = "Teakettle", breaks = chosen_breaks)
 
-
-
-pdf(file = "TEAK_classified_tree_heights.pdf", width = 7, height = 6)
-
-# plot
-plot(chm_rcl,
-     col=c("red","blue","green"), # hard code colors, unclassified (0)=white,
-		 #N (1) =blue, S(2)=green
-     main="Tree Heights for\nLower Teakettle Site",
-		 xlab = "Lat (UTM)",
-		 ylab = "Lon (UTM)",
-     legend=F)
-# allow legend to plot outside of bounds
-par(xpd=TRUE)
-# create the legend
-# legend x position
-leg_x <- par()$usr[2] + 20
-
-# legend y position
-leg_y <- par()$usr[4] + 50 - (abs(par()$usr[3] - par()$usr[4]) / 2)
-
-legend(leg_x, leg_y,  # set x,y legend location
-       legend = c("6-10m", "10-20m", ">20m"),  # make sure the order matches the colors, next
-       fill = c("red", "blue", "green"),
-       bty="n") # turn off border
-
-dev.off()
+make_pdf(plot_reclassified_raster(rast.in = chm, site.name = "Teakettle", breaks = chosen_breaks),
+         filename = "TEAK_reclassified_chm.pdf",
+         height=7, width=6)
 
 ```
 
