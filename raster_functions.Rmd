@@ -5,10 +5,6 @@ date: "June 21, 2016"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
 ## Objectives
 
 Objectives/tasks to work though:
@@ -70,6 +66,15 @@ rcl_m <- matrix(class_m,
                    ncol = 3,
                    byrow = TRUE)
 
+# plot a new density and include cutoffs
+density(chm,
+     main = "Density of Teakettle Site CHM",
+     xlab = "Height (m)")
+
+# add in threshold values
+abline(v=rcl_m[,2], col = "red")
+
+
 # save as pdf
 pdf(file = "TEAK_CHM_density_with_breaks.pdf", width = 6, height = 7)
 
@@ -87,10 +92,35 @@ dev.off()
 chm_rcl <- reclassify(chm,
                       rcl_m)
 
-pdf(file = "TEAK_classified_tree_heights.pdf", width = 7, height = 6)
 # plot the result
 # make room for a legend
 par(xpd = FALSE, mar=c(5.1, 4.1, 4.1, 4.5))
+
+# plot
+plot(chm_rcl,
+     col=c("red","blue","green"), # hard code colors, unclassified (0)=white,
+		 #N (1) =blue, S(2)=green
+     main="Tree Heights for\nLower Teakettle Site",
+		 xlab = "Lat (UTM)",
+		 ylab = "Lon (UTM)",
+     legend=F)
+# allow legend to plot outside of bounds
+par(xpd=TRUE)
+# create the legend
+# legend x position
+leg_x <- par()$usr[2] + 20
+
+# legend y position
+leg_y <- par()$usr[4] + 50 - (abs(par()$usr[3] - par()$usr[4]) / 2)
+
+legend(leg_x, leg_y,  # set x,y legend location
+       legend = c("6-10m", "10-20m", ">20m"),  # make sure the order matches the colors, next
+       fill = c("red", "blue", "green"),
+       bty="n") # turn off border
+
+
+
+pdf(file = "TEAK_classified_tree_heights.pdf", width = 7, height = 6)
 
 # plot
 plot(chm_rcl,
