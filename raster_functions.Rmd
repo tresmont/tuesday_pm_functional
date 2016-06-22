@@ -27,6 +27,7 @@ library(rhdf5)
 ## Import CHM Raster
 
 ```{r import-chm}
+# import the external functions
 source("scripts/functions.r")
 
 # setting some parameters
